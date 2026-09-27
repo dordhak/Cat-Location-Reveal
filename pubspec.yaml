@@ -1,0 +1,46 @@
+name: cat_location_reveal
+description: "Spot cats in the wild and share their location."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
+
+  # Backend
+  supabase_flutter: ^2.5.6
+
+  # Maps & location
+  google_maps_flutter: ^2.9.0
+  geolocator: ^13.0.1
+
+
+  # Media
+  image_picker: ^1.1.2
+
+  # Utilities
+  cached_network_image: ^3.4.1
+  intl: ^0.19.0
+  flutter_rating_bar: ^4.0.1
+  uuid: ^4.4.2
+  permission_handler: ^11.3.1
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^4.0.8
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true
