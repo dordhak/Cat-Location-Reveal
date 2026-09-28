@@ -25,6 +25,9 @@ dependencies:
   # Media
   image_picker: ^1.1.2
 
+  #fonts
+  google_fonts: ^6.2.1
+
   # Utilities
   cached_network_image: ^3.4.1
   intl: ^0.19.0
