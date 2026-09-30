@@ -117,6 +117,7 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
           name: data.name,
           catType: data.catType,
           primaryColor: data.primaryColor,
+          description: data.description,
           friendlinessRating: data.friendlinessRating,
           latitude: formState.position!.latitude,
           longitude: formState.position!.longitude,
@@ -149,7 +150,6 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
       appBar: AppBar(title: const Text('Spot a cat')),
       body: locationAsync.when(
         data: (position) {
-          // Seed the pin from GPS once; after that the user's drag wins.
           if (!_positionSeeded) {
             _positionSeeded = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -201,8 +201,6 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   mapToolbarEnabled: false,
-                  // Let the map keep touches inside its box so dragging the
-                  // pin doesn't scroll the page instead.
                   gestureRecognizers: {
                     Factory<OneSequenceGestureRecognizer>(
                       () => EagerGestureRecognizer(),

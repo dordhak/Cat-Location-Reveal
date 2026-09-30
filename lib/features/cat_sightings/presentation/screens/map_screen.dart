@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/map_style.dart';
+import '../../../auth/presentation/screens/auth_screen.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../data/models/cat_sighting_model.dart';
 import '../../providers/cat_sighting_providers.dart';
 import '../../providers/location_provider.dart';
@@ -36,11 +38,66 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     super.dispose();
   }
 
+  /// Guests get sent to sign in/register before posting. Signed-in users go
+  /// straight through. Returns without navigating if the user backs out of
+  /// the auth screen.
+  Future<void> _onSpotACatPressed() async {
+    if (!ref.read(isSignedInProvider)) {
+      final signedIn = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      if (signedIn != true || !mounted) return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SubmitSightingScreen()),
+    );
+  }
+
+  Future<void> _onAccountIconPressed() async {
+    final isSignedIn = ref.read(isSignedInProvider);
+    if (!isSignedIn) {
+      await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    final shouldSignOut = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Signed in'),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout_rounded),
+              title: const Text('Sign out'),
+              onTap: () => Navigator.pop(sheetContext, true),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (shouldSignOut == true) {
+      await ref.read(authRepositoryProvider).signOut();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final locationAsync = ref.watch(currentLocationProvider);
     final sightingsAsync = ref.watch(catSightingsListProvider);
+    final isSignedIn = ref.watch(isSignedInProvider);
     final position = locationAsync.value;
 
     return Scaffold(
@@ -98,7 +155,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 child: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Align(alignment: Alignment.centerLeft, child: pill),
+                    child: Row(
+                      children: [
+                        Expanded(child: pill),
+                        const SizedBox(width: 8),
+                        _AccountButton(
+                          isSignedIn: isSignedIn,
+                          onTap: _onAccountIconPressed,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -149,8 +215,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Two FABs on one screen need distinct hero tags, or navigating to
-          // another route throws a "multiple heroes share the same tag" error.
           FloatingActionButton.small(
             heroTag: 'recenter',
             tooltip: 'Center on my location',
@@ -170,13 +234,43 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             heroTag: 'spot_cat',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SubmitSightingScreen()),
-            ),
+            onPressed: _onSpotACatPressed,
             icon: const Icon(Icons.pets_rounded),
             label: const Text('Spot a cat'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AccountButton extends StatelessWidget {
+  final bool isSignedIn;
+  final VoidCallback onTap;
+
+  const _AccountButton({required this.isSignedIn, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      surfaceTintColor: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Icon(
+            isSignedIn ? Icons.person_rounded : Icons.login_rounded,
+            size: 20,
+            color: scheme.secondary,
+          ),
+        ),
       ),
     );
   }
@@ -201,8 +295,7 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final foreground =
-        isError ? scheme.onErrorContainer : scheme.onSurface;
+    final foreground = isError ? scheme.onErrorContainer : scheme.onSurface;
 
     return Material(
       color: isError ? scheme.errorContainer : Colors.white,
@@ -234,6 +327,7 @@ class _StatusPill extends StatelessWidget {
               Flexible(
                 child: Text(
                   label,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: foreground,

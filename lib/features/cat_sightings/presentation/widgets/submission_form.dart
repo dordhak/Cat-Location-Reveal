@@ -7,12 +7,14 @@ class SubmissionFormData {
   final String name;
   final String catType;
   final String primaryColor;
+  final String description;
   final int friendlinessRating;
 
   const SubmissionFormData({
     required this.name,
     required this.catType,
     required this.primaryColor,
+    required this.description,
     required this.friendlinessRating,
   });
 }
@@ -39,12 +41,12 @@ class _SubmissionFormState extends State<SubmissionForm> {
   final _nameController = TextEditingController();
   final _typeController = TextEditingController();
   final _colorController = TextEditingController();
+  final _descriptionController = TextEditingController();
   int _rating = 3;
 
   @override
   void initState() {
     super.initState();
-    // Report the default rating even if the user never touches the stars.
     WidgetsBinding.instance.addPostFrameCallback((_) => _notifyChange());
   }
 
@@ -53,6 +55,7 @@ class _SubmissionFormState extends State<SubmissionForm> {
     _nameController.dispose();
     _typeController.dispose();
     _colorController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -61,6 +64,7 @@ class _SubmissionFormState extends State<SubmissionForm> {
       name: _nameController.text.trim(),
       catType: _typeController.text.trim(),
       primaryColor: _colorController.text.trim(),
+      description: _descriptionController.text.trim(),
       friendlinessRating: _rating,
     ));
   }
@@ -104,7 +108,7 @@ class _SubmissionFormState extends State<SubmissionForm> {
         TextField(
           controller: _colorController,
           textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
             labelText: 'Fur color',
             hintText: 'Pick one below or type your own',
@@ -140,7 +144,26 @@ class _SubmissionFormState extends State<SubmissionForm> {
               ),
           ],
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _descriptionController,
+          maxLines: 4,
+          minLines: 3,
+          maxLength: 280,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: 'Notes (optional)',
+            hintText: 'Usually hangs around the café near the entrance, '
+                'likes treats...',
+            alignLabelWithHint: true,
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(bottom: 60),
+              child: Icon(Icons.edit_note_rounded),
+            ),
+          ),
+          onChanged: (_) => _notifyChange(),
+        ),
+        const SizedBox(height: 24),
         Text('How friendly was it?', style: theme.textTheme.titleMedium),
         const SizedBox(height: 10),
         FriendlinessRatingBar(
