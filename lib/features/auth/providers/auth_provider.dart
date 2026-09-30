@@ -1,34 +1,28 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/config/supabase_config.dart';
-import '../../../core/errors/app_exception.dart';
+import '../data/auth_repository.dart';
 
 part 'auth_provider.g.dart';
 
-@riverpod
-class AuthController extends _$AuthController {
-  @override
-  Future<User> build() async {
-    final client = SupabaseConfig.client;
+@Riverpod(keepAlive: true)
+AuthRepository authRepository(Ref ref) => AuthRepository();
 
-    final existingUser = client.auth.currentUser;
-    if (existingUser != null) return existingUser;
-
-    try {
-      final response = await client.auth.signInAnonymously();
-      final user = response.user;
-      if (user == null) {
-        throw const AppException('Could not start a session. Please restart the app.');
-      }
-      return user;
-    } on AuthException catch (e) {
-      throw AppException('Sign-in failed: ${e.message}');
-    }
-  }
+@Riverpod(keepAlive: true)
+Stream<Session?> authSessionChanges(Ref ref) {
+  return ref.watch(authRepositoryProvider).authStateChanges.map(
+        (authState) => authState.session,
+      );
 }
 
 @riverpod
-String? currentUserId(Ref ref) {
-  return ref.watch(authControllerProvider).value?.id;
+User? currentUser(Ref ref) {
+  final streamed = ref.watch(authSessionChangesProvider).value?.user;
+  return streamed ?? ref.watch(authRepositoryProvider).currentUser;
 }
+
+@riverpod
+String? currentUserId(Ref ref) => ref.watch(currentUserProvider)?.id;
+
+@riverpod
+bool isSignedIn(Ref ref) => ref.watch(currentUserProvider) != null;

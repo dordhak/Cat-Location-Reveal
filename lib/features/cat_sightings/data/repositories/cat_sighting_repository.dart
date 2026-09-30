@@ -15,12 +15,14 @@ class CatSightingRepository {
   CatSightingRepository({SupabaseClient? client})
       : _client = client ?? SupabaseConfig.client;
 
-  /// Fetches all cat sightings, newest first.
+  /// Fetches all cat sightings, newest first, with each row's uploader
+  /// display name embedded via the `profiles` foreign key (see the SQL
+  /// migration that adds cat_sightings_user_id_profiles_fkey).
   Future<List<CatSighting>> fetchAllSightings() async {
     try {
       final response = await _client
           .from(AppConstants.catSightingsTable)
-          .select()
+          .select('*, profiles(display_name)')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -33,8 +35,6 @@ class CatSightingRepository {
     }
   }
 
-  /// Uploads an image file to Storage and returns its public URL.
-  /// Path convention: {userId}/{uuid}.jpg — matches the RLS folder policy.
   Future<String> uploadCatPhoto({
     required File imageFile,
     required String userId,
@@ -44,15 +44,10 @@ class CatSightingRepository {
       final fileName = '${_uuid.v4()}.$fileExt';
       final storagePath = '$userId/$fileName';
 
-      await _client.storage
-          .from(AppConstants.catPhotosBucket)
-          .upload(
+      await _client.storage.from(AppConstants.catPhotosBucket).upload(
             storagePath,
             imageFile,
-            fileOptions: const FileOptions(
-              cacheControl: '3600',
-              upsert: false,
-            ),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
       return _client.storage
@@ -65,8 +60,6 @@ class CatSightingRepository {
     }
   }
 
-  /// Inserts a new cat sighting record and returns the saved row
-  /// (including the DB-generated id and created_at).
   Future<CatSighting> createSighting(CatSighting sighting) async {
     try {
       final response = await _client
@@ -83,7 +76,6 @@ class CatSightingRepository {
     }
   }
 
-  /// Deletes a sighting — RLS ensures a user can only delete their own.
   Future<void> deleteSighting(String sightingId) async {
     try {
       await _client

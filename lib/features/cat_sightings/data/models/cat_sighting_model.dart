@@ -4,11 +4,13 @@ class CatSighting {
   final String name;
   final String catType;
   final String primaryColor;
+  final String? description;
   final int friendlinessRating;
   final double latitude;
   final double longitude;
   final String photoUrl;
   final DateTime createdAt;
+  final String? uploaderName;
 
   const CatSighting({
     required this.id,
@@ -16,14 +18,15 @@ class CatSighting {
     required this.name,
     required this.catType,
     required this.primaryColor,
+    this.description,
     required this.friendlinessRating,
     required this.latitude,
     required this.longitude,
     required this.photoUrl,
     required this.createdAt,
+    this.uploaderName,
   });
 
-  /// Converts a raw Supabase row (Map) into a CatSighting object.
   factory CatSighting.fromJson(Map<String, dynamic> json) {
     return CatSighting(
       id: json['id'] as String,
@@ -31,22 +34,28 @@ class CatSighting {
       name: json['name'] as String,
       catType: json['cat_type'] as String,
       primaryColor: json['primary_color'] as String,
+      description: json['description'] as String?,
       friendlinessRating: json['friendliness_rating'] as int,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       photoUrl: json['photo_url'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      // Only present when the repository's query embeds the `profiles`
+      // relationship (see CatSightingRepository.fetchAllSightings).
+      uploaderName:
+          (json['profiles'] as Map<String, dynamic>?)?['display_name'] as String?,
     );
   }
 
-  /// Converts this object back into a Map for inserting/updating in Supabase.
-  /// Note: `id` and `created_at` are excluded — the database generates those.
+  /// Excludes `id`, `created_at` (DB-generated) and `uploaderName` (derived
+  /// via a join, never written directly).
   Map<String, dynamic> toInsertJson() {
     return {
       'user_id': userId,
       'name': name,
       'cat_type': catType,
       'primary_color': primaryColor,
+      'description': description,
       'friendliness_rating': friendlinessRating,
       'latitude': latitude,
       'longitude': longitude,
@@ -54,11 +63,11 @@ class CatSighting {
     };
   }
 
-  /// Handy for updating local state after an edit without refetching.
   CatSighting copyWith({
     String? name,
     String? catType,
     String? primaryColor,
+    String? description,
     int? friendlinessRating,
     double? latitude,
     double? longitude,
@@ -70,11 +79,13 @@ class CatSighting {
       name: name ?? this.name,
       catType: catType ?? this.catType,
       primaryColor: primaryColor ?? this.primaryColor,
+      description: description ?? this.description,
       friendlinessRating: friendlinessRating ?? this.friendlinessRating,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt,
+      uploaderName: uploaderName,
     );
   }
 }
