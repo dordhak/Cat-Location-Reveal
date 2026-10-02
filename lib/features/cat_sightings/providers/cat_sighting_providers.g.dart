@@ -8,12 +8,9 @@ part of 'cat_sighting_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Single shared instance of the repository.
 
 @ProviderFor(catSightingRepository)
 final catSightingRepositoryProvider = CatSightingRepositoryProvider._();
-
-/// Single shared instance of the repository.
 
 final class CatSightingRepositoryProvider
     extends
@@ -23,7 +20,6 @@ final class CatSightingRepositoryProvider
           CatSightingRepository
         >
     with $Provider<CatSightingRepository> {
-  /// Single shared instance of the repository.
   CatSightingRepositoryProvider._()
     : super(
         from: null,
@@ -61,15 +57,11 @@ final class CatSightingRepositoryProvider
 String _$catSightingRepositoryHash() =>
     r'71621324e442de8e55b6e332937b1f1f7b1ccc38';
 
-/// The live list of all cat sightings, for the map to render as markers.
-
 @ProviderFor(CatSightingsList)
 final catSightingsListProvider = CatSightingsListProvider._();
 
-/// The live list of all cat sightings, for the map to render as markers.
 final class CatSightingsListProvider
     extends $AsyncNotifierProvider<CatSightingsList, List<CatSighting>> {
-  /// The live list of all cat sightings, for the map to render as markers.
   CatSightingsListProvider._()
     : super(
         from: null,
@@ -91,8 +83,6 @@ final class CatSightingsListProvider
 
 String _$catSightingsListHash() => r'48575150705e3ca2802b560338fb06f0458cee10';
 
-/// The live list of all cat sightings, for the map to render as markers.
-
 abstract class _$CatSightingsList extends $AsyncNotifier<List<CatSighting>> {
   FutureOr<List<CatSighting>> build();
   @$mustCallSuper
@@ -112,15 +102,11 @@ abstract class _$CatSightingsList extends $AsyncNotifier<List<CatSighting>> {
   }
 }
 
-/// Handles the submit flow: upload photo -> insert row -> refresh the list.
-
 @ProviderFor(SightingSubmission)
 final sightingSubmissionProvider = SightingSubmissionProvider._();
 
-/// Handles the submit flow: upload photo -> insert row -> refresh the list.
 final class SightingSubmissionProvider
     extends $AsyncNotifierProvider<SightingSubmission, void> {
-  /// Handles the submit flow: upload photo -> insert row -> refresh the list.
   SightingSubmissionProvider._()
     : super(
         from: null,
@@ -141,9 +127,7 @@ final class SightingSubmissionProvider
 }
 
 String _$sightingSubmissionHash() =>
-    r'7493aba802a8ea4a08fc4360b3b003baa24c70fe';
-
-/// Handles the submit flow: upload photo -> insert row -> refresh the list.
+    r'd66582afab16445ae7b080f326d5560fc7765e15';
 
 abstract class _$SightingSubmission extends $AsyncNotifier<void> {
   FutureOr<void> build();
