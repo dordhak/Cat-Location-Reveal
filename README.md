@@ -1,7 +1,9 @@
 # 🐱 Cat Location Reveal
 
 Cat Location Reveal is a Flutter app for sharing cat sightings on a live map.
-Users can open the app, get anonymous authentication, view nearby sightings, and submit new sightings with a photo, details, and pin location.
+Users can create an account, manage a public display name and avatar, view
+nearby sightings, and submit cat photos, details, and pin locations. Each
+sighting is attributed to the poster's profile.
 
 ## What the app does
 
@@ -36,11 +38,18 @@ lib/
 │   ├── errors/app_exception.dart
 │   └── utils/location_utils.dart
 ├── features/
-│   ├── auth/providers/               # Anonymous auth provider
-│   └── cat_sightings/
-│       ├── data/                     # Model + repository (Supabase I/O)
-│       ├── providers/                # Location/list/submission state
-│       └── presentation/             # Screens + widgets
+│   ├── auth/
+│   │   ├── data/                     # Supabase email/password auth repository
+│   │   ├── presentation/screens/     # Sign-in and registration UI
+│   │   └── providers/                # Auth session and current-user state
+│   ├── cat_sightings/
+│   │   ├── data/                     # Model + repository (Supabase I/O)
+│   │   ├── providers/                # Location/list/submission state
+│   │   └── presentation/             # Screens + widgets
+│   └── profile/
+│       ├── data/                     # Profile model + avatar/profile repository
+│       ├── providers/                # Current profile state
+│       └── presentation/screens/     # Edit profile UI
 └── shared/widgets/
 ```
 
