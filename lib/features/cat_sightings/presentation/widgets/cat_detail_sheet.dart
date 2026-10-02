@@ -149,26 +149,37 @@ class CatDetailSheet extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (sighting.uploaderName != null &&
-                        sighting.uploaderName!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.account_circle_outlined,
-                            size: 18,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Spotted by ${sighting.uploaderName}',
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: scheme.primaryContainer,
+                          backgroundImage: sighting.uploaderAvatarUrl != null &&
+                                  sighting.uploaderAvatarUrl!.isNotEmpty
+                              ? CachedNetworkImageProvider(
+                                  sighting.uploaderAvatarUrl!)
+                              : null,
+                          child: sighting.uploaderAvatarUrl == null ||
+                                  sighting.uploaderAvatarUrl!.isEmpty
+                              ? Icon(
+                                  Icons.person_rounded,
+                                  color: scheme.onPrimaryContainer,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Spotted by ${sighting.uploaderName?.isNotEmpty == true ? sighting.uploaderName : 'Cat lover'}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

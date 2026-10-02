@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/map_style.dart';
 import '../../../auth/presentation/screens/auth_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../profile/presentation/screens/edit_profile_screen.dart';
 import '../../data/models/cat_sighting_model.dart';
 import '../../providers/cat_sighting_providers.dart';
 import '../../providers/location_provider.dart';
@@ -64,7 +65,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
 
     if (!mounted) return;
-    final shouldSignOut = await showModalBottomSheet<bool>(
+    final accountAction = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(
@@ -78,16 +79,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ),
             ListTile(
+              leading: const Icon(Icons.manage_accounts_outlined),
+              title: const Text('Edit profile'),
+              onTap: () => Navigator.pop(sheetContext, 'profile'),
+            ),
+            ListTile(
               leading: const Icon(Icons.logout_rounded),
               title: const Text('Sign out'),
-              onTap: () => Navigator.pop(sheetContext, true),
+              onTap: () => Navigator.pop(sheetContext, 'signout'),
             ),
           ],
         ),
       ),
     );
 
-    if (shouldSignOut == true) {
+    if (accountAction == 'profile' && mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+      );
+    } else if (accountAction == 'signout') {
       await ref.read(authRepositoryProvider).signOut();
     }
   }

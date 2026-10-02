@@ -36,6 +36,17 @@ class AuthRepository {
   Future<void> signOut() async {
     await _client.auth.signOut();
   }
+  
+  Future<void> updateAccount({String? email, String? password}) async {
+    try {
+      await _client.auth.updateUser(
+        UserAttributes(email: email, password: password),
+      );
+    } on AuthException catch (e) {
+      throw AppException(_friendlyMessage(e));
+    }
+  }
+
 
   /// Supabase's raw AuthException messages are written for logs, not users.
   String _friendlyMessage(AuthException e) {

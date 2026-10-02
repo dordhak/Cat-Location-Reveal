@@ -16,13 +16,12 @@ class CatSightingRepository {
       : _client = client ?? SupabaseConfig.client;
 
   /// Fetches all cat sightings, newest first, with each row's uploader
-  /// display name embedded via the `profiles` foreign key (see the SQL
-  /// migration that adds cat_sightings_user_id_profiles_fkey).
+  ///username and avatar embedded with 'profiles' foreign key
   Future<List<CatSighting>> fetchAllSightings() async {
     try {
       final response = await _client
           .from(AppConstants.catSightingsTable)
-          .select('*, profiles(display_name)')
+          .select('*, profiles:user_id(username, avatar_url)')
           .order('created_at', ascending: false);
 
       return (response as List)

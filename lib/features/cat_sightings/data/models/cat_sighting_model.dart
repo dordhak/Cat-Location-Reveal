@@ -11,6 +11,7 @@ class CatSighting {
   final String photoUrl;
   final DateTime createdAt;
   final String? uploaderName;
+  final String? uploaderAvatarUrl;
 
   const CatSighting({
     required this.id,
@@ -25,6 +26,7 @@ class CatSighting {
     required this.photoUrl,
     required this.createdAt,
     this.uploaderName,
+    this.uploaderAvatarUrl,
   });
 
   factory CatSighting.fromJson(Map<String, dynamic> json) {
@@ -43,7 +45,9 @@ class CatSighting {
       // Only present when the repository's query embeds the `profiles`
       // relationship (see CatSightingRepository.fetchAllSightings).
       uploaderName:
-          (json['profiles'] as Map<String, dynamic>?)?['display_name'] as String?,
+          (json['profiles'] as Map<String, dynamic>?)?['username'] as String?,
+      uploaderAvatarUrl:
+          (json['profiles'] as Map<String, dynamic>?)?['avatar_url'] as String?,
     );
   }
 
@@ -86,6 +90,7 @@ class CatSighting {
       photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt,
       uploaderName: uploaderName,
+      uploaderAvatarUrl: uploaderAvatarUrl,
     );
   }
 }
