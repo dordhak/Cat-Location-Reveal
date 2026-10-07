@@ -21,7 +21,9 @@ class CatSightingRepository {
     try {
       final response = await _client
           .from(AppConstants.catSightingsTable)
-          .select('*, profiles:user_id(username, avatar_url)')
+          .select(
+            '*, profiles!cat_sightings_user_id_fkey(username, avatar_url)',
+          )
           .order('created_at', ascending: false);
 
       return (response as List)

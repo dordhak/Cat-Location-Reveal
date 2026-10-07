@@ -80,6 +80,13 @@ Create these resources in Supabase:
 3. **Auth:** enable anonymous sign-in
 4. **Policies:** allow reading sightings and allow users to create/manage only their own uploads/rows (based on `user_id` and storage path `{userId}/{file}`)
 
+Apply the checked-in migration at
+`supabase/migrations/20261008000000_profiles_storage_and_sightings_policies.sql`
+to the same Supabase project used by the app. It creates/backfills the
+`profiles.username` column, refreshes the PostgREST schema cache, configures
+avatar upsert policies, and allows public reads of sightings. Without applying
+this migration, the Flutter code can still report missing-column or RLS errors.
+
 ## Google Maps setup
 
 This project currently uses a key in:
