@@ -1,4 +1,4 @@
-# 🐱 Cat Location Reveal
+# 🐱 Cat Map
 
 Cat Location Reveal is a Flutter app for sharing cat sightings on a live map.
 Users can create an account, manage a public display name and avatar, view
