@@ -13,6 +13,7 @@ import '../../providers/location_provider.dart';
 import '../widgets/cat_detail_sheet.dart';
 import '../widgets/cat_marker.dart';
 import 'submit_sighting_screen.dart';
+import 'cat_list_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -123,6 +124,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               label: list.isEmpty
                   ? 'No cats yet. Be the first to spot one.'
                   : '${list.length} ${list.length == 1 ? 'cat' : 'cats'} on the map',
+              onTap: list.isEmpty
+                  ? null
+                  : () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const CatListScreen()),
+                    ),
             ),
             loading: () =>
                 const _StatusPill(loading: true, label: 'Finding cats...'),
