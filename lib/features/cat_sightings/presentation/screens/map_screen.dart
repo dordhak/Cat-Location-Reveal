@@ -44,23 +44,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// the auth screen.
   Future<void> _onSpotACatPressed() async {
     if (!ref.read(isSignedInProvider)) {
-      final signedIn = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => const AuthScreen()),
-      );
+      final signedIn = await Navigator.of(context)
+          .push<bool>(MaterialPageRoute(builder: (_) => const AuthScreen()));
       if (signedIn != true || !mounted) return;
     }
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SubmitSightingScreen()),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const SubmitSightingScreen()));
   }
 
   Future<void> _onAccountIconPressed() async {
     final isSignedIn = ref.read(isSignedInProvider);
     if (!isSignedIn) {
-      await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => const AuthScreen()),
-      );
+      await Navigator.of(context)
+          .push<bool>(MaterialPageRoute(builder: (_) => const AuthScreen()));
       return;
     }
 
@@ -83,22 +80,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               title: const Text('Edit profile'),
               onTap: () => Navigator.pop(sheetContext, 'profile'),
             ),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded),
-              title: const Text('Sign out'),
-              onTap: () => Navigator.pop(sheetContext, 'signout'),
-            ),
           ],
         ),
       ),
     );
 
     if (accountAction == 'profile' && mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-      );
-    } else if (accountAction == 'signout') {
-      await ref.read(authRepositoryProvider).signOut();
+      await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
     }
   }
 
@@ -113,16 +102,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     return Scaffold(
       body: locationAsync.when(
         data: (position) {
-          final icon = _catIcon ??
+          final icon =
+              _catIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
           final sightings = sightingsAsync.value ?? const <CatSighting>[];
 
           final markers = sightings
-              .map((sighting) => CatMarkerBuilder.build(
-                    sighting: sighting,
-                    icon: icon,
-                    onTap: () => CatDetailSheet.show(context, sighting),
-                  ))
+              .map(
+                (sighting) => CatMarkerBuilder.build(
+                  sighting: sighting,
+                  icon: icon,
+                  onTap: () => CatDetailSheet.show(context, sighting),
+                ),
+              )
               .toSet();
 
           final pill = sightingsAsync.when(
@@ -200,7 +192,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.location_off_rounded, size: 48, color: scheme.outline),
+                Icon(
+                  Icons.location_off_rounded,
+                  size: 48,
+                  color: scheme.outline,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   error.toString(),
@@ -234,11 +230,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             onPressed: position == null
                 ? null
                 : () => _mapController?.animateCamera(
-                      CameraUpdate.newLatLngZoom(
-                        LatLng(position.latitude, position.longitude),
-                        AppConstants.defaultZoom,
-                      ),
+                    CameraUpdate.newLatLngZoom(
+                      LatLng(position.latitude, position.longitude),
+                      AppConstants.defaultZoom,
                     ),
+                  ),
             child: const Icon(Icons.my_location_rounded),
           ),
           const SizedBox(height: 12),

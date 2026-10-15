@@ -42,7 +42,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       maxWidth: 1200,
       maxHeight: 1200,
     );
-    if (image != null && mounted) setState(() => _avatarFile = File(image.path));
+    if (image != null && mounted)
+      setState(() => _avatarFile = File(image.path));
   }
 
   Future<void> _save() async {
@@ -69,7 +70,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       if (email != user.email || password.isNotEmpty) {
-        await ref.read(authRepositoryProvider).updateAccount(
+        await ref
+            .read(authRepositoryProvider)
+            .updateAccount(
               email: email == user.email ? null : email,
               password: password.isEmpty ? null : password,
             );
@@ -77,17 +80,46 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ref.invalidate(currentUserProfileProvider);
       ref.invalidate(catSightingsListProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile saved.')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Profile saved.')));
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSignOut != true || !mounted) return;
+
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not sign out: $error')));
     }
   }
 
@@ -131,13 +163,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             backgroundImage: _avatarFile != null
                                 ? FileImage(_avatarFile!)
                                 : avatarUrl != null && avatarUrl.isNotEmpty
-                                    ? CachedNetworkImageProvider(avatarUrl)
-                                    : null,
-                            child: _avatarFile == null &&
+                                ? CachedNetworkImageProvider(avatarUrl)
+                                : null,
+                            child:
+                                _avatarFile == null &&
                                     (avatarUrl == null || avatarUrl.isEmpty)
-                                ? Icon(Icons.person_rounded,
+                                ? Icon(
+                                    Icons.person_rounded,
                                     size: 52,
-                                    color: theme.colorScheme.onPrimaryContainer)
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  )
                                 : null,
                           ),
                           Positioned(
@@ -163,7 +198,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       validator: (value) {
                         final username = value?.trim() ?? '';
                         if (username.isEmpty) return 'Enter a username.';
-                        if (username.length < 3) return 'Use at least 3 characters.';
+                        if (username.length < 3)
+                          return 'Use at least 3 characters.';
                         return null;
                       },
                     ),
@@ -213,9 +249,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Save changes'),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isSaving ? null : _signOut,
+                        icon: const Icon(Icons.logout_rounded),
+                        label: const Text('Sign out'),
                       ),
                     ),
                   ],

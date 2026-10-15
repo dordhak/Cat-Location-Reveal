@@ -12,7 +12,7 @@ class CatLocationRevealApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cat Location Reveal',
+      title: 'Cat Map',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       home: const MapScreen(),
