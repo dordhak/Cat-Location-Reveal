@@ -14,6 +14,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -24,6 +25,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -38,6 +40,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     final repository = ref.read(authRepositoryProvider);
+    final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -45,7 +48,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (_mode == _Mode.signIn) {
         await repository.signIn(email: email, password: password);
       } else {
-        await repository.signUp(email: email, password: password);
+        await repository.signUp(
+          email: email,
+          password: password,
+          username: username,
+        );
       }
       if (!mounted) return;
       Navigator.of(context).pop(true);
@@ -92,14 +99,36 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  isSignIn
-                      ? 'Sign in to post a sighting.'
-                      : 'Create an account so cat lovers know who spotted this one.',
+                  isSignIn ? 'Sign in to post a sighting.' : 'Create an account so cat lovers know who spotted this one.',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 28),
+                if (!isSignIn) ...[
+                  TextFormField(
+                    controller: _usernameController,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      prefixIcon: Icon(Icons.alternate_email_rounded),
+                    ),
+                    validator: (value) {
+                      if (isSignIn) return null;
+                      final username = value?.trim() ?? '';
+                      if (username.isEmpty) return 'Choose a username.';
+                      if (username.length < 3) {
+                        return 'Use at least 3 characters.';
+                      }
+                      if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
+                        return 'Use only letters, numbers, and underscores.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -124,7 +153,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
                   autofillHints: [
-                    isSignIn ? AutofillHints.password : AutofillHints.newPassword,
+                    isSignIn
+                        ? AutofillHints.password
+                        : AutofillHints.newPassword,
                   ],
                   onFieldSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
@@ -179,9 +210,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     onPressed: _isSubmitting
                         ? null
                         : () => setState(() {
-                              _mode = isSignIn ? _Mode.signUp : _Mode.signIn;
-                              _errorText = null;
-                            }),
+                            _mode = isSignIn ? _Mode.signUp : _Mode.signIn;
+                            _errorText = null;
+                          }),
                     child: Text(
                       isSignIn
                           ? "Don't have an account? Create one"
