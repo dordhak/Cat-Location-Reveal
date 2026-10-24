@@ -1,37 +1,38 @@
-# 🐱 Cat Map
+# Cat Location Reveal
 
 Cat Location Reveal is a Flutter app for sharing cat sightings on a live map.
-Users can create an account, manage a public display name and avatar, view
+Users can create an account with a custom username, manage a public avatar, view
 nearby sightings, and submit cat photos, details, and pin locations. Each
 sighting is attributed to the poster's profile.
 
 ## What the app does
 
-- Shows your current location on Google Maps
+- Shows your current location on Google Maps on Android/iOS and OpenStreetMap on web
 - Loads cat sightings from Supabase and renders them as map markers
 - Opens a detail sheet for each sighting (photo, name, type, color, friendliness, timestamp)
 - Lets users submit new sightings:
   - Take a photo or pick one from gallery
   - Fill in cat details
-  - Drag a pin to fine-tune the exact spot
-  - Upload photo to Supabase Storage and save metadata to Supabase Postgres
-- Uses **anonymous Supabase auth** (no login screen for MVP)
+  - Drag the pin on mobile or tap the map on web to fine-tune the exact spot
+  - Upload photos to Supabase Storage and save metadata to Supabase Postgres
+- Uses **Supabase email/password authentication**
+- Works as an installable Progressive Web App on iPhone
 
 ## Tech stack
 
 - **Frontend:** Flutter (Dart)
 - **State management:** Riverpod + code generation (`@riverpod`)
 - **Backend:** Supabase (Auth, Postgres, Storage)
-- **Maps:** `google_maps_flutter`
+- **Maps:** `google_maps_flutter` on Android/iOS, `flutter_map` with OpenStreetMap on web
 - **Location:** `geolocator`
-- **Media:** `image_picker`
+- **Media:** `image_picker` with web-safe `XFile` uploads
 
 ## Project structure
 
 ```text
 lib/
 ├── main.dart                         # App entry + Supabase init
-├── app.dart                          # MaterialApp + auth gate
+├── app.dart                          # MaterialApp and public map shell
 ├── core/
 │   ├── config/supabase_config.dart   # Reads SUPABASE_* dart-defines
 │   ├── constants/app_constants.dart
@@ -55,9 +56,9 @@ lib/
 
 ## Prerequisites
 
-- Flutter SDK (matching `sdk: ^3.13.4` from `pubspec.yaml`)
+- Flutter stable 3.47.x
 - A Supabase project
-- Google Maps API key(s)
+- Google Maps API keys for Android/iOS only
 - Android Studio / Xcode (for emulator/device runs)
 
 ## Backend setup (Supabase)
@@ -76,23 +77,23 @@ Create these resources in Supabase:
      - `longitude` (double/float)
      - `photo_url` (text)
      - `created_at` (timestamp)
-2. **Storage bucket:** `cat-photos`
+2. **Storage buckets:** `cat-photos` and `avatars`
 3. **Auth:** enable email/password sign-in
-4. **Policies:** allow reading sightings and allow users to create/manage only their own uploads/rows (based on `user_id` and storage path `{userId}/{file}`)
+4. **Policies:** allow reading sightings and allow users to create/manage only their own rows and uploads (based on `user_id` and storage path `{userId}/{file}`)
 
-Apply the checked-in migration at
-`supabase/migrations/20261008000000_profiles_storage_and_sightings_policies.sql`
-to the same Supabase project used by the app. It creates/backfills the
+[Apply the checked-in migration](supabase/migrations/20261008000000_profiles_storage_and_sightings_policies.sql)
+to the same Supabase project used by the app. It creates and backfills the
 `profiles.username` column, refreshes the PostgREST schema cache, configures
 avatar upsert policies, and allows public reads of sightings. Without applying
 this migration, the Flutter code can still report missing-column or RLS errors.
 
 ## Map setup
 
-Android and iOS use Google Maps and require platform API keys in:
+Android and iOS use Google Maps and require platform API keys in the native
+configuration files:
 
-- `/home/runner/work/Cat-Location-Reveal/Cat-Location-Reveal/android/app/src/main/AndroidManifest.xml`
-- `/home/runner/work/Cat-Location-Reveal/Cat-Location-Reveal/ios/Runner/AppDelegate.swift`
+- [AndroidManifest.xml](android/app/src/main/AndroidManifest.xml)
+- [AppDelegate.swift](ios/Runner/AppDelegate.swift)
 
 Replace those values with your own API key(s) before production use.
 The web app uses OpenStreetMap tiles through `flutter_map`, so it does not
@@ -102,10 +103,16 @@ provider for high-volume production traffic.
 
 ## How to run
 
-From the repository root:
+From the repository root, keep `env.json` local and git-ignored:
 
 ```bash
 flutter pub get
+flutter run -d chrome --dart-define-from-file=env.json
+```
+
+For Android or iOS, pass the values directly instead:
+
+```bash
 flutter run \
   --dart-define=SUPABASE_URL=YOUR_SUPABASE_URL \
   --dart-define=SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
@@ -121,17 +128,32 @@ flutter run -d emulator-5554 \
 
 ### Web and iPhone PWA testing
 
-```bash
-flutter run -d chrome --dart-define-from-file=env.json
-```
+The web map uses OpenStreetMap and does not require a Google Maps web key or
+a billing-enabled Google Cloud project. OpenStreetMap attribution is shown in
+the map. Use a dedicated tile provider for high-volume production traffic.
 
 The GitHub Pages deployment is configured in
-`.github/workflows/web-deploy.yml` and publishes at
-`https://dordhak.github.io/Cat-Location-Reveal/`. Add these repository
-secrets before deploying: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Enable
-GitHub Pages with **GitHub Actions** as the source.
+[web-deploy.yml](.github/workflows/web-deploy.yml) and publishes at
+`https://dordhak.github.io/Cat-Location-Reveal/`.
+
+Before deploying:
+
+- Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as GitHub Actions repository secrets.
+- Set GitHub Pages source to **GitHub Actions**.
+- Add the Pages URL to Supabase Auth site and redirect URL settings.
+
 On iPhone, open the deployed URL in Safari and choose **Share > Add to Home
 Screen**.
+
+## Validation
+
+```bash
+flutter analyze
+flutter test
+flutter build web --release --base-href "/Cat-Location-Reveal/" \
+  --dart-define-from-file=env.json
+flutter build apk --debug
+```
 
 ## Optional: regenerate Riverpod files
 
