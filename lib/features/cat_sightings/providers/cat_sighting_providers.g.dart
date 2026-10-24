@@ -127,7 +127,7 @@ final class SightingSubmissionProvider
 }
 
 String _$sightingSubmissionHash() =>
-    r'd66582afab16445ae7b080f326d5560fc7765e15';
+    r'ef2bd870469488c4a9d85b49b34dcf7ee30814fb';
 
 abstract class _$SightingSubmission extends $AsyncNotifier<void> {
   FutureOr<void> build();

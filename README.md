@@ -77,7 +77,7 @@ Create these resources in Supabase:
      - `photo_url` (text)
      - `created_at` (timestamp)
 2. **Storage bucket:** `cat-photos`
-3. **Auth:** enable anonymous sign-in
+3. **Auth:** enable email/password sign-in
 4. **Policies:** allow reading sightings and allow users to create/manage only their own uploads/rows (based on `user_id` and storage path `{userId}/{file}`)
 
 Apply the checked-in migration at
@@ -87,14 +87,18 @@ to the same Supabase project used by the app. It creates/backfills the
 avatar upsert policies, and allows public reads of sightings. Without applying
 this migration, the Flutter code can still report missing-column or RLS errors.
 
-## Google Maps setup
+## Map setup
 
-This project currently uses a key in:
+Android and iOS use Google Maps and require platform API keys in:
 
 - `/home/runner/work/Cat-Location-Reveal/Cat-Location-Reveal/android/app/src/main/AndroidManifest.xml`
 - `/home/runner/work/Cat-Location-Reveal/Cat-Location-Reveal/ios/Runner/AppDelegate.swift`
 
 Replace those values with your own API key(s) before production use.
+The web app uses OpenStreetMap tiles through `flutter_map`, so it does not
+require a Google Maps web key or a billing-enabled Google Cloud project.
+OpenStreetMap attribution is displayed on the map; use a dedicated tile
+provider for high-volume production traffic.
 
 ## How to run
 
@@ -114,6 +118,20 @@ flutter run -d emulator-5554 \
   --dart-define=SUPABASE_URL=... \
   --dart-define=SUPABASE_ANON_KEY=...
 ```
+
+### Web and iPhone PWA testing
+
+```bash
+flutter run -d chrome --dart-define-from-file=env.json
+```
+
+The GitHub Pages deployment is configured in
+`.github/workflows/web-deploy.yml` and publishes at
+`https://dordhak.github.io/Cat-Location-Reveal/`. Add these repository
+secrets before deploying: `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Enable
+GitHub Pages with **GitHub Actions** as the source.
+On iPhone, open the deployed URL in Safari and choose **Share > Add to Home
+Screen**.
 
 ## Optional: regenerate Riverpod files
 

@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -20,7 +21,14 @@ class CatMarkerIcon {
 
   static Future<BitmapDescriptor>? _cache;
 
-  static Future<BitmapDescriptor> load() => _cache ??= _draw();
+  static Future<BitmapDescriptor> load() {
+    if (kIsWeb) {
+      return Future.value(
+        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      );
+    }
+    return _cache ??= _draw();
+  }
 
   static Future<BitmapDescriptor> _draw() async {
     final recorder = ui.PictureRecorder();
@@ -63,9 +71,9 @@ class CatMarkerIcon {
     }
 
     final image = await recorder.endRecording().toImage(
-          (_width * _pixelScale).round(),
-          (_height * _pixelScale).round(),
-        );
+      (_width * _pixelScale).round(),
+      (_height * _pixelScale).round(),
+    );
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     if (data == null) {
       return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);

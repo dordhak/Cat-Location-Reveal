@@ -1,12 +1,12 @@
 {
-    "name": "Cat Map",
-    "short_name": "Cat Map",
+    "name": "Cat Location Reveal",
+    "short_name": "Cat Reveal",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FAF7F4",
+    "theme_color": "#EE8A1F",
+    "description": "Spot cats in the wild and share their location.",
+    "orientation": "portrait",
     "prefer_related_applications": false,
     "icons": [
         {

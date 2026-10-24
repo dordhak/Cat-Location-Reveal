@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/errors/app_exception.dart';
@@ -8,7 +7,7 @@ import '../models/user_profile.dart';
 
 class ProfileRepository {
   ProfileRepository({SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+    : _client = client ?? SupabaseConfig.client;
 
   final SupabaseClient _client;
   static const _table = 'profiles';
@@ -48,19 +47,37 @@ class ProfileRepository {
     }
   }
 
-  Future<String> uploadAvatar({required File imageFile, required String userId}) async {
+  Future<String> uploadAvatar({
+    required XFile imageFile,
+    required String userId,
+  }) async {
     try {
-      final extension = imageFile.path.split('.').last.toLowerCase();
+      final extension = _fileExtension(imageFile);
       final path = '$userId/avatar.$extension';
-      await _client.storage.from(_avatarsBucket).upload(
+      await _client.storage
+          .from(_avatarsBucket)
+          .uploadBinary(
             path,
-            imageFile,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+            await imageFile.readAsBytes(),
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+              contentType: imageFile.mimeType ?? 'image/jpeg',
+            ),
           );
       // Bust image caches when the user replaces their photo at the same path.
       return '${_client.storage.from(_avatarsBucket).getPublicUrl(path)}?v=${DateTime.now().millisecondsSinceEpoch}';
     } on StorageException catch (e) {
       throw AppException('Failed to upload avatar: ${e.message}');
     }
+  }
+
+  String _fileExtension(XFile imageFile) {
+    final extension = imageFile.path.split('.').last.toLowerCase();
+    if (extension.length <= 4 && extension != imageFile.path.toLowerCase()) {
+      return extension;
+    }
+    final mimeType = imageFile.mimeType?.split('/').last.toLowerCase();
+    return mimeType == 'jpeg' ? 'jpg' : (mimeType ?? 'jpg');
   }
 }
