@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/map_style.dart';
 import '../../../auth/presentation/screens/auth_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -24,6 +28,7 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   GoogleMapController? _mapController;
+  final _webMapController = fm.MapController();
   BitmapDescriptor? _catIcon;
 
   @override
@@ -117,6 +122,23 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ),
               )
               .toSet();
+          final webMarkers = sightings
+              .map(
+                (sighting) => fm.Marker(
+                  point: ll.LatLng(sighting.latitude, sighting.longitude),
+                  width: 48,
+                  height: 56,
+                  child: GestureDetector(
+                    onTap: () => CatDetailSheet.show(context, sighting),
+                    child: const Icon(
+                      Icons.location_on,
+                      color: AppColors.marmalade,
+                      size: 48,
+                    ),
+                  ),
+                ),
+              )
+              .toList();
 
           final pill = sightingsAsync.when(
             data: (list) => _StatusPill(
@@ -143,19 +165,44 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
           return Stack(
             children: [
-              GoogleMap(
-                style: kCatMapStyle,
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(position.latitude, position.longitude),
-                  zoom: AppConstants.defaultZoom,
+              if (kIsWeb)
+                fm.FlutterMap(
+                  mapController: _webMapController,
+                  options: fm.MapOptions(
+                    initialCenter: ll.LatLng(
+                      position.latitude,
+                      position.longitude,
+                    ),
+                    initialZoom: AppConstants.defaultZoom,
+                  ),
+                  children: [
+                    fm.TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.cat_location_reveal',
+                    ),
+                    fm.MarkerLayer(markers: webMarkers),
+                    const fm.RichAttributionWidget(
+                      attributions: [
+                        fm.TextSourceAttribution('OpenStreetMap contributors'),
+                      ],
+                    ),
+                  ],
+                )
+              else
+                GoogleMap(
+                  style: kCatMapStyle,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(position.latitude, position.longitude),
+                    zoom: AppConstants.defaultZoom,
+                  ),
+                  onMapCreated: (controller) => _mapController = controller,
+                  markers: markers,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
                 ),
-                onMapCreated: (controller) => _mapController = controller,
-                markers: markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-              ),
               Positioned(
                 top: 0,
                 left: 0,
@@ -235,12 +282,21 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             elevation: 2,
             onPressed: position == null
                 ? null
-                : () => _mapController?.animateCamera(
-                    CameraUpdate.newLatLngZoom(
-                      LatLng(position.latitude, position.longitude),
-                      AppConstants.defaultZoom,
-                    ),
-                  ),
+                : () {
+                    if (kIsWeb) {
+                      _webMapController.move(
+                        ll.LatLng(position.latitude, position.longitude),
+                        AppConstants.defaultZoom,
+                      );
+                    } else {
+                      _mapController?.animateCamera(
+                        CameraUpdate.newLatLngZoom(
+                          LatLng(position.latitude, position.longitude),
+                          AppConstants.defaultZoom,
+                        ),
+                      );
+                    }
+                  },
             child: const Icon(Icons.my_location_rounded),
           ),
           const SizedBox(height: 12),

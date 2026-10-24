@@ -44,13 +44,6 @@ jobs:
           printf '{"SUPABASE_URL":"%s","SUPABASE_ANON_KEY":"%s"}\n' \
             "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > env.json
 
-      - name: Inject Google Maps web key
-        env:
-          WEB_MAPS_API_KEY: ${{ secrets.WEB_MAPS_API_KEY }}
-        run: |
-          : "${WEB_MAPS_API_KEY:?WEB_MAPS_API_KEY secret is required}"
-          sed -i "s|__MAPS_WEB_KEY__|${WEB_MAPS_API_KEY}|g" web/index.html
-
       - name: Build Flutter Web
         run: flutter build web --release --base-href "/Cat-Location-Reveal/" --dart-define-from-file=env.json
 

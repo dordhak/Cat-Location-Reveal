@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart' as ll;
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/map_style.dart';
@@ -185,35 +187,78 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: scheme.outlineVariant),
                 ),
-                child: GoogleMap(
-                  style: kCatMapStyle,
-                  initialCameraPosition: CameraPosition(target: pin, zoom: 16),
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('new_sighting'),
-                      position: pin,
-                      draggable: true,
-                      icon:
-                          _pinIcon ??
-                          BitmapDescriptor.defaultMarkerWithHue(
-                            BitmapDescriptor.hueOrange,
+                child: kIsWeb
+                    ? fm.FlutterMap(
+                        options: fm.MapOptions(
+                          initialCenter: ll.LatLng(pin.latitude, pin.longitude),
+                          initialZoom: 16,
+                          onTap: (_, point) => ref
+                              .read(submissionFormControllerProvider.notifier)
+                              .setPosition(
+                                LatLng(point.latitude, point.longitude),
+                              ),
+                        ),
+                        children: [
+                          fm.TileLayer(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName:
+                                'com.example.cat_location_reveal',
                           ),
-                      anchor: CatMarkerIcon.anchor,
-                      onDragEnd: (newPosition) => ref
-                          .read(submissionFormControllerProvider.notifier)
-                          .setPosition(newPosition),
-                    ),
-                  },
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  gestureRecognizers: {
-                    Factory<OneSequenceGestureRecognizer>(
-                      () => EagerGestureRecognizer(),
-                    ),
-                  },
-                ),
+                          fm.MarkerLayer(
+                            markers: [
+                              fm.Marker(
+                                point: ll.LatLng(pin.latitude, pin.longitude),
+                                width: 48,
+                                height: 56,
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: scheme.primary,
+                                  size: 48,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const fm.RichAttributionWidget(
+                            attributions: [
+                              fm.TextSourceAttribution(
+                                'OpenStreetMap contributors',
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : GoogleMap(
+                        style: kCatMapStyle,
+                        initialCameraPosition: CameraPosition(
+                          target: pin,
+                          zoom: 16,
+                        ),
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('new_sighting'),
+                            position: pin,
+                            draggable: true,
+                            icon:
+                                _pinIcon ??
+                                BitmapDescriptor.defaultMarkerWithHue(
+                                  BitmapDescriptor.hueOrange,
+                                ),
+                            anchor: CatMarkerIcon.anchor,
+                            onDragEnd: (newPosition) => ref
+                                .read(submissionFormControllerProvider.notifier)
+                                .setPosition(newPosition),
+                          ),
+                        },
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        mapToolbarEnabled: false,
+                        gestureRecognizers: {
+                          Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                          ),
+                        },
+                      ),
               ),
               const SizedBox(height: 28),
               const _SectionHeader(title: 'About the cat'),
