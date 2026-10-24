@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +23,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _passwordController = TextEditingController();
   final _picker = ImagePicker();
 
-  File? _avatarFile;
+  XFile? _avatarFile;
+  Uint8List? _avatarBytes;
   bool _didPopulate = false;
   bool _isSaving = false;
 
@@ -42,8 +43,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       maxWidth: 1200,
       maxHeight: 1200,
     );
-    if (image != null && mounted)
-      setState(() => _avatarFile = File(image.path));
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      if (mounted) {
+        setState(() {
+          _avatarFile = image;
+          _avatarBytes = bytes;
+        });
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -160,8 +168,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           CircleAvatar(
                             radius: 52,
                             backgroundColor: theme.colorScheme.primaryContainer,
-                            backgroundImage: _avatarFile != null
-                                ? FileImage(_avatarFile!)
+                            backgroundImage: _avatarBytes != null
+                                ? MemoryImage(_avatarBytes!)
                                 : avatarUrl != null && avatarUrl.isNotEmpty
                                 ? CachedNetworkImageProvider(avatarUrl)
                                 : null,

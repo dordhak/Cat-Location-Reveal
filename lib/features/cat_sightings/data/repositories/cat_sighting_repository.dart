@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -13,7 +12,7 @@ class CatSightingRepository {
   final _uuid = const Uuid();
 
   CatSightingRepository({SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+    : _client = client ?? SupabaseConfig.client;
 
   /// Fetches all cat sightings, newest first, with each row's uploader
   ///username and avatar embedded with 'profiles' foreign key
@@ -37,18 +36,24 @@ class CatSightingRepository {
   }
 
   Future<String> uploadCatPhoto({
-    required File imageFile,
+    required XFile imageFile,
     required String userId,
   }) async {
     try {
-      final fileExt = imageFile.path.split('.').last;
+      final fileExt = _fileExtension(imageFile);
       final fileName = '${_uuid.v4()}.$fileExt';
       final storagePath = '$userId/$fileName';
 
-      await _client.storage.from(AppConstants.catPhotosBucket).upload(
+      await _client.storage
+          .from(AppConstants.catPhotosBucket)
+          .uploadBinary(
             storagePath,
-            imageFile,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+            await imageFile.readAsBytes(),
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: false,
+              contentType: imageFile.mimeType ?? 'image/jpeg',
+            ),
           );
 
       return _client.storage
@@ -59,6 +64,15 @@ class CatSightingRepository {
     } catch (e) {
       throw AppException('Something went wrong uploading the photo.');
     }
+  }
+
+  String _fileExtension(XFile imageFile) {
+    final extension = imageFile.path.split('.').last.toLowerCase();
+    if (extension.length <= 4 && extension != imageFile.path.toLowerCase()) {
+      return extension;
+    }
+    final mimeType = imageFile.mimeType?.split('/').last.toLowerCase();
+    return mimeType == 'jpeg' ? 'jpg' : (mimeType ?? 'jpg');
   }
 
   Future<CatSighting> createSighting(CatSighting sighting) async {

@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/errors/app_exception.dart';
@@ -37,7 +36,7 @@ class SightingSubmission extends _$SightingSubmission {
   }
 
   Future<void> submit({
-    required File photoFile,
+    required XFile photoFile,
     required String name,
     required String catType,
     required String primaryColor,
@@ -69,10 +68,9 @@ class SightingSubmission extends _$SightingSubmission {
         name: name,
         catType: catType,
         primaryColor: primaryColor,
-        description:
-            (trimmedDescription == null || trimmedDescription.isEmpty)
-                ? null
-                : trimmedDescription,
+        description: (trimmedDescription == null || trimmedDescription.isEmpty)
+            ? null
+            : trimmedDescription,
         friendlinessRating: friendlinessRating,
         latitude: latitude,
         longitude: longitude,

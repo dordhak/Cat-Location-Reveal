@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -43,9 +41,10 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
       maxWidth: AppConstants.maxImageDimension,
     );
     if (picked != null) {
+      final bytes = await picked.readAsBytes();
       ref
           .read(submissionFormControllerProvider.notifier)
-          .setPhoto(File(picked.path));
+          .setPhoto(picked, bytes);
     }
   }
 
@@ -112,7 +111,9 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
       return;
     }
 
-    await ref.read(sightingSubmissionProvider.notifier).submit(
+    await ref
+        .read(sightingSubmissionProvider.notifier)
+        .submit(
           photoFile: formState.photo!,
           name: data.name,
           catType: data.catType,
@@ -159,13 +160,18 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
                   .setPosition(LatLng(position.latitude, position.longitude));
             });
           }
-          final pin = formState.position ??
+          final pin =
+              formState.position ??
               LatLng(position.latitude, position.longitude);
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
             children: [
-              _PhotoPicker(photo: formState.photo, onTap: _showImageSourceSheet),
+              _PhotoPicker(
+                photo: formState.photo,
+                photoBytes: formState.photoBytes,
+                onTap: _showImageSourceSheet,
+              ),
               const SizedBox(height: 28),
               const _SectionHeader(
                 title: 'Where was it?',
@@ -187,7 +193,8 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
                       markerId: const MarkerId('new_sighting'),
                       position: pin,
                       draggable: true,
-                      icon: _pinIcon ??
+                      icon:
+                          _pinIcon ??
                           BitmapDescriptor.defaultMarkerWithHue(
                             BitmapDescriptor.hueOrange,
                           ),
@@ -222,7 +229,11 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.location_off_rounded, size: 48, color: scheme.outline),
+                Icon(
+                  Icons.location_off_rounded,
+                  size: 48,
+                  color: scheme.outline,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   error.toString(),
@@ -294,10 +305,15 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _PhotoPicker extends StatelessWidget {
-  final File? photo;
+  final XFile? photo;
+  final Uint8List? photoBytes;
   final VoidCallback onTap;
 
-  const _PhotoPicker({required this.photo, required this.onTap});
+  const _PhotoPicker({
+    required this.photo,
+    required this.photoBytes,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +364,7 @@ class _PhotoPicker extends StatelessWidget {
               : Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.file(photo!, fit: BoxFit.cover),
+                    Image.memory(photoBytes!, fit: BoxFit.cover),
                     Positioned(
                       right: 12,
                       bottom: 12,
@@ -365,8 +381,11 @@ class _PhotoPicker extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.edit_rounded,
-                                  size: 16, color: scheme.onSurface),
+                              Icon(
+                                Icons.edit_rounded,
+                                size: 16,
+                                color: scheme.onSurface,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Change photo',

@@ -42,7 +42,7 @@ final class SubmissionFormControllerProvider
 }
 
 String _$submissionFormControllerHash() =>
-    r'c1c9e312cd6c4db63bd9bf92da0888967f34fe51';
+    r'5f3528bdeb9cfc3849734898030307403c823b36';
 
 abstract class _$SubmissionFormController
     extends $Notifier<SubmissionFormState> {

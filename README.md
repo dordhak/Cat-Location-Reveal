@@ -115,6 +115,26 @@ flutter run -d emulator-5554 \
   --dart-define=SUPABASE_ANON_KEY=...
 ```
 
+### Web and iPhone PWA testing
+
+Google Maps on Flutter Web requires a Maps JavaScript API key. For local web
+testing, replace `__MAPS_WEB_KEY__` in `web/index.html` with a temporary key,
+or run a local copy of the web shell with the key injected, and do not commit
+the result. The production workflow injects the key from the
+`WEB_MAPS_API_KEY` GitHub secret.
+
+```bash
+flutter run -d chrome --dart-define-from-file=env.json
+```
+
+The GitHub Pages deployment is configured in
+`.github/workflows/web-deploy.yml` and publishes at
+`https://dordhak.github.io/Cat-Location-Reveal/`. Add these repository
+secrets before deploying: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
+`WEB_MAPS_API_KEY`. Enable GitHub Pages with **GitHub Actions** as the source.
+On iPhone, open the deployed URL in Safari and choose **Share > Add to Home
+Screen**.
+
 ## Optional: regenerate Riverpod files
 
 If you edit `@riverpod` providers:
