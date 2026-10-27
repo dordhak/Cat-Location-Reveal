@@ -3,10 +3,11 @@ class AppConstants {
 
   // Supabase
   static const String catSightingsTable = 'cat_sightings';
+  static const String sightingReportsTable = 'sighting_reports';
   static const String catPhotosBucket = 'cat-photos';
 
   // Map defaults (used before we get the user's real GPS fix)
-  static const double defaultLatitude = 3.1390;   // Kuala Lumpur
+  static const double defaultLatitude = 3.1390; // Kuala Lumpur
   static const double defaultLongitude = 101.6869;
   static const double defaultZoom = 14.0;
 

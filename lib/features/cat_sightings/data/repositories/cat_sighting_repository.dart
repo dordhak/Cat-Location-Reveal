@@ -99,6 +99,47 @@ class CatSightingRepository {
           .eq('id', sightingId);
     } on PostgrestException catch (e) {
       throw AppException('Failed to delete sighting: ${e.message}');
+    } catch (e) {
+      throw const AppException('Something went wrong deleting the sighting.');
+    }
+  }
+
+  Future<List<CatSighting>> fetchUserSightings(String userId) async {
+    try {
+      final response = await _client
+          .from(AppConstants.catSightingsTable)
+          .select(
+            '*, profiles!cat_sightings_user_id_fkey(username, avatar_url)',
+          )
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return (response as List)
+          .map((row) => CatSighting.fromJson(row as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw AppException('Failed to load your postings: ${e.message}');
+    } catch (e) {
+      throw const AppException('Something went wrong loading your postings.');
+    }
+  }
+
+  Future<void> submitReport({
+    required String sightingId,
+    required String reporterId,
+    required String reason,
+    String? details,
+  }) async {
+    try {
+      await _client.from(AppConstants.sightingReportsTable).insert({
+        'sighting_id': sightingId,
+        'reporter_id': reporterId,
+        'reason': reason,
+        'details': details,
+      });
+    } on PostgrestException catch (e) {
+      throw AppException('Failed to submit report: ${e.message}');
+    } catch (e) {
+      throw const AppException('Something went wrong submitting the report.');
     }
   }
 }

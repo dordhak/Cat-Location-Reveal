@@ -1,14 +1,87 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../auth/presentation/screens/auth_screen.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../data/models/cat_sighting_model.dart';
+import '../../providers/cat_sighting_providers.dart';
 import 'friendliness_rating_bar.dart';
 
-class CatDetailSheet extends StatelessWidget {
+class CatDetailSheet extends ConsumerWidget {
   final CatSighting sighting;
 
   const CatDetailSheet({super.key, required this.sighting});
+
+  Future<void> _report(BuildContext context, WidgetRef ref) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) {
+      final signedIn = await Navigator.of(context)
+          .push<bool>(MaterialPageRoute(builder: (_) => const AuthScreen()));
+      if (signedIn != true || !context.mounted) return;
+    }
+
+    if (!context.mounted) return;
+    final result = await showDialog<({String reason, String? details})>(
+      context: context,
+      builder: (dialogContext) => const _ReportDialog(),
+    );
+    if (result == null || !context.mounted) return;
+
+    try {
+      await ref
+          .read(catSightingRepositoryProvider)
+          .submitReport(
+            sightingId: sighting.id,
+            reporterId: ref.read(currentUserIdProvider)!,
+            reason: result.reason,
+            details: result.details,
+          );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Thanks. Your report was submitted.')),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete sighting?'),
+        content: const Text('This removes your cat sighting permanently.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(catSightingRepositoryProvider).deleteSighting(sighting.id);
+      ref.invalidate(catSightingsListProvider);
+      if (context.mounted) Navigator.pop(context);
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    }
+  }
 
   static Future<void> show(BuildContext context, CatSighting sighting) {
     return showModalBottomSheet<void>(
@@ -22,7 +95,7 @@ class CatDetailSheet extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -155,12 +228,15 @@ class CatDetailSheet extends StatelessWidget {
                         CircleAvatar(
                           radius: 18,
                           backgroundColor: scheme.primaryContainer,
-                          backgroundImage: sighting.uploaderAvatarUrl != null &&
+                          backgroundImage:
+                              sighting.uploaderAvatarUrl != null &&
                                   sighting.uploaderAvatarUrl!.isNotEmpty
                               ? CachedNetworkImageProvider(
-                                  sighting.uploaderAvatarUrl!)
+                                  sighting.uploaderAvatarUrl!,
+                                )
                               : null,
-                          child: sighting.uploaderAvatarUrl == null ||
+                          child:
+                              sighting.uploaderAvatarUrl == null ||
                                   sighting.uploaderAvatarUrl!.isEmpty
                               ? Icon(
                                   Icons.person_rounded,
@@ -180,6 +256,25 @@ class CatDetailSheet extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () => _report(context, ref),
+                          icon: const Icon(Icons.flag_outlined),
+                          label: const Text('Report'),
+                        ),
+                        if (ref.watch(currentUserIdProvider) ==
+                            sighting.userId) ...[
+                          const SizedBox(width: 10),
+                          OutlinedButton.icon(
+                            onPressed: () => _delete(context, ref),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Delete'),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -187,6 +282,84 @@ class CatDetailSheet extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ReportDialog extends StatefulWidget {
+  const _ReportDialog();
+
+  @override
+  State<_ReportDialog> createState() => _ReportDialogState();
+}
+
+class _ReportDialogState extends State<_ReportDialog> {
+  final _detailsController = TextEditingController();
+  String _reason = 'inappropriate';
+
+  @override
+  void dispose() {
+    _detailsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Report cat sighting'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Why are you reporting this posting?'),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _reason,
+              decoration: const InputDecoration(labelText: 'Reason'),
+              items: const [
+                DropdownMenuItem(
+                  value: 'inappropriate',
+                  child: Text('Inappropriate content'),
+                ),
+                DropdownMenuItem(
+                  value: 'harassment',
+                  child: Text('Harassment'),
+                ),
+                DropdownMenuItem(value: 'bullying', child: Text('Bullying')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _reason = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _detailsController,
+              maxLines: 3,
+              maxLength: 500,
+              decoration: const InputDecoration(
+                labelText: 'Additional details (optional)',
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, (
+            reason: _reason,
+            details: _detailsController.text.trim().isEmpty
+                ? null
+                : _detailsController.text.trim(),
+          )),
+          child: const Text('Submit report'),
+        ),
+      ],
     );
   }
 }

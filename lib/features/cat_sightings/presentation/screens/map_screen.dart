@@ -18,6 +18,7 @@ import '../widgets/cat_detail_sheet.dart';
 import '../widgets/cat_marker.dart';
 import 'submit_sighting_screen.dart';
 import 'cat_list_screen.dart';
+import 'my_sightings_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
@@ -86,6 +87,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               title: const Text('Edit profile'),
               onTap: () => Navigator.pop(sheetContext, 'profile'),
             ),
+            ListTile(
+              leading: const Icon(Icons.library_books_outlined),
+              title: const Text('My postings'),
+              onTap: () => Navigator.pop(sheetContext, 'my-sightings'),
+            ),
           ],
         ),
       ),
@@ -94,6 +100,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (accountAction == 'profile' && mounted) {
       await Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+    } else if (accountAction == 'my-sightings' && mounted) {
+      await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const MySightingsScreen()));
     }
   }
 
