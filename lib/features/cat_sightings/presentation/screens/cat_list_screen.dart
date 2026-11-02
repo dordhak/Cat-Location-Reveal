@@ -7,7 +7,9 @@ import '../../providers/cat_sighting_providers.dart';
 import '../widgets/cat_detail_sheet.dart';
 
 class CatListScreen extends ConsumerWidget {
-  const CatListScreen({super.key});
+  final ValueChanged<CatSighting>? onShowOnMap;
+
+  const CatListScreen({super.key, this.onShowOnMap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,6 +48,9 @@ class CatListScreen extends ConsumerWidget {
                   scheme: scheme,
                   theme: theme,
                   onTap: () => CatDetailSheet.show(context, sighting),
+                  onShowOnMap: onShowOnMap == null
+                      ? null
+                      : () => onShowOnMap!(sighting),
                 );
               },
             ),
@@ -61,12 +66,14 @@ class _CatListCard extends StatelessWidget {
   final ColorScheme scheme;
   final ThemeData theme;
   final VoidCallback onTap;
+  final VoidCallback? onShowOnMap;
 
   const _CatListCard({
     required this.sighting,
     required this.scheme,
     required this.theme,
     required this.onTap,
+    this.onShowOnMap,
   });
 
   @override
@@ -84,47 +91,68 @@ class _CatListCard extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
+          child: Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 92,
-                  height: 92,
-                  child: CachedNetworkImage(
-                    imageUrl: sighting.photoUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => ColoredBox(
-                      color: scheme.primaryContainer,
-                      child: Icon(Icons.pets_rounded, color: scheme.secondary),
-                    ),
-                    errorWidget: (_, __, ___) => ColoredBox(
-                      color: scheme.primaryContainer,
-                      child: Icon(Icons.pets_rounded, color: scheme.secondary),
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      width: 92,
+                      height: 92,
+                      child: CachedNetworkImage(
+                        imageUrl: sighting.photoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => ColoredBox(
+                          color: scheme.primaryContainer,
+                          child: Icon(
+                            Icons.pets_rounded,
+                            color: scheme.secondary,
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => ColoredBox(
+                          color: scheme.primaryContainer,
+                          child: Icon(
+                            Icons.pets_rounded,
+                            color: scheme.secondary,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(sighting.name, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    _InfoRow(
-                      icon: Icons.pets_rounded,
-                      text: 'Breed: ${sighting.catType}',
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(sighting.name, style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        _InfoRow(
+                          icon: Icons.pets_rounded,
+                          text: 'Breed: ${sighting.catType}',
+                        ),
+                        const SizedBox(height: 4),
+                        _InfoRow(
+                          icon: Icons.person_outline_rounded,
+                          text: 'Uploaded by $uploader',
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    _InfoRow(
-                      icon: Icons.person_outline_rounded,
-                      text: 'Uploaded by $uploader',
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: scheme.outline),
+                ],
               ),
-              Icon(Icons.chevron_right_rounded, color: scheme.outline),
+              if (onShowOnMap != null) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.tonalIcon(
+                    onPressed: onShowOnMap,
+                    icon: const Icon(Icons.location_on_outlined, size: 18),
+                    label: const Text('Show On Map'),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

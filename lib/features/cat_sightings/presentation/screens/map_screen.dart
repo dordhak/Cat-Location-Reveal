@@ -60,6 +60,35 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         .push(MaterialPageRoute(builder: (_) => const SubmitSightingScreen()));
   }
 
+  Future<void> _openCatList() async {
+    final sighting = await Navigator.of(context).push<CatSighting>(
+      MaterialPageRoute(
+        builder: (_) => CatListScreen(
+          onShowOnMap: (sighting) => Navigator.of(context).pop(sighting),
+        ),
+      ),
+    );
+    if (sighting != null && mounted) {
+      _focusOnSighting(sighting);
+    }
+  }
+
+  void _focusOnSighting(CatSighting sighting) {
+    if (kIsWeb) {
+      _webMapController.move(
+        ll.LatLng(sighting.latitude, sighting.longitude),
+        AppConstants.defaultZoom + 2,
+      );
+    } else {
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(sighting.latitude, sighting.longitude),
+          AppConstants.defaultZoom + 2,
+        ),
+      );
+    }
+  }
+
   Future<void> _onAccountIconPressed() async {
     final isSignedIn = ref.read(isSignedInProvider);
     if (!isSignedIn) {
@@ -155,11 +184,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               label: list.isEmpty
                   ? 'No cats yet. Be the first to spot one.'
                   : '${list.length} ${list.length == 1 ? 'cat' : 'cats'} on the map',
-              onTap: list.isEmpty
-                  ? null
-                  : () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CatListScreen()),
-                    ),
+              onTap: list.isEmpty ? null : _openCatList,
             ),
             loading: () =>
                 const _StatusPill(loading: true, label: 'Finding cats...'),
