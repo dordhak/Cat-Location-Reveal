@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -7,74 +8,76 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/cat_sighting_model.dart';
 
-/// Draws the paw-print pin once and caches it. Needs a google_maps_flutter
-/// version that has `BitmapDescriptor.bytes` (2.10 or newer).
 class CatMarkerIcon {
   CatMarkerIcon._();
 
-  static const double _width = 48;
-  static const double _height = 60;
+  static const double _width = 52;
+  static const double _height = 64;
   static const double _pixelScale = 3;
 
-  /// The pin's tip sits at y = 56 of 60, so anchor there instead of the bottom.
-  static const Offset anchor = Offset(0.5, 56 / 60);
+  static const Offset anchor = Offset(0.5, 62 / _height);
 
-  static Future<BitmapDescriptor>? _cache;
-
-  static Future<BitmapDescriptor> load() {
+  static Future<BitmapDescriptor> load([String? photoUrl]) async {
     if (kIsWeb) {
-      return Future.value(
-        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-      );
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
-    return _cache ??= _draw();
-  }
 
-  static Future<BitmapDescriptor> _draw() async {
+    if (photoUrl == null || photoUrl.isEmpty) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    }
+
+    final sourceImage = await _loadImage(photoUrl);
+    if (sourceImage == null) {
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+    }
+
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.scale(_pixelScale);
 
+    final circle = Path()
+      ..addOval(const Rect.fromLTWH(2, 2, _width - 4, _width - 4));
     final pin = Path.combine(
       PathOperation.union,
+      circle,
       Path()
-        ..addOval(Rect.fromCircle(center: const Offset(24, 24), radius: 20)),
-      Path()
-        ..moveTo(12.5, 37)
-        ..lineTo(24, 56)
-        ..lineTo(35.5, 37)
+        ..moveTo(13, 38)
+        ..lineTo(_width / 2, 62)
+        ..lineTo(39, 38)
         ..close(),
     );
-
-    canvas.drawShadow(pin, Colors.black, 2.5, true);
+    canvas.drawShadow(pin, Colors.black, 2, true);
     canvas.drawPath(pin, Paint()..color = AppColors.marmalade);
+    canvas.save();
+    canvas.clipPath(circle);
+    final source = Rect.fromLTWH(
+      0,
+      0,
+      sourceImage.width.toDouble(),
+      sourceImage.height.toDouble(),
+    );
+    canvas.drawImageRect(
+      sourceImage,
+      source,
+      const Rect.fromLTWH(2, 2, 48, 48),
+      Paint(),
+    );
+    canvas.restore();
     canvas.drawPath(
-      pin,
+      circle,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..color = Colors.white,
     );
 
-    final paw = Paint()..color = AppColors.ink;
-    canvas.drawOval(
-      Rect.fromCenter(center: const Offset(24, 28), width: 15, height: 11),
-      paw,
-    );
-    for (final toe in const [
-      Offset(15.5, 21),
-      Offset(20.5, 16),
-      Offset(27.5, 16),
-      Offset(32.5, 21),
-    ]) {
-      canvas.drawCircle(toe, 3.1, paw);
-    }
-
-    final image = await recorder.endRecording().toImage(
+    final generatedImage = await recorder.endRecording().toImage(
       (_width * _pixelScale).round(),
       (_height * _pixelScale).round(),
     );
-    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    final data = await generatedImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
     if (data == null) {
       return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
@@ -83,6 +86,24 @@ class CatMarkerIcon {
       width: _width,
       height: _height,
     );
+  }
+
+  static Future<ui.Image?> _loadImage(String url) async {
+    final completer = Completer<ui.Image?>();
+    final stream = NetworkImage(url).resolve(const ImageConfiguration());
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, _) {
+        if (!completer.isCompleted) completer.complete(info.image);
+        stream.removeListener(listener);
+      },
+      onError: (_, _) {
+        if (!completer.isCompleted) completer.complete(null);
+        stream.removeListener(listener);
+      },
+    );
+    stream.addListener(listener);
+    return completer.future;
   }
 }
 
