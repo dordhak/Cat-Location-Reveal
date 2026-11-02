@@ -30,13 +30,19 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   GoogleMapController? _mapController;
   final _webMapController = fm.MapController();
-  BitmapDescriptor? _catIcon;
+  final Map<String, BitmapDescriptor> _catIcons = {};
+  final Set<String> _loadingCatIcons = {};
 
-  @override
-  void initState() {
-    super.initState();
-    CatMarkerIcon.load().then((icon) {
-      if (mounted) setState(() => _catIcon = icon);
+  void _loadCatIcon(CatSighting sighting) {
+    if (_catIcons.containsKey(sighting.id) ||
+        _loadingCatIcons.contains(sighting.id)) {
+      return;
+    }
+    _loadingCatIcons.add(sighting.id);
+    CatMarkerIcon.load(sighting.photoUrl).then((icon) {
+      if (!mounted) return;
+      setState(() => _catIcons[sighting.id] = icon);
+      _loadingCatIcons.remove(sighting.id);
     });
   }
 
@@ -146,16 +152,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     return Scaffold(
       body: locationAsync.when(
         data: (position) {
-          final icon =
-              _catIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+          final icon = BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          );
           final sightings = sightingsAsync.value ?? const <CatSighting>[];
 
           final markers = sightings
+              .where((sighting) {
+                _loadCatIcon(sighting);
+                return _catIcons.containsKey(sighting.id);
+              })
               .map(
                 (sighting) => CatMarkerBuilder.build(
                   sighting: sighting,
-                  icon: icon,
+                  icon: _catIcons[sighting.id] ?? icon,
                   onTap: () => CatDetailSheet.show(context, sighting),
                 ),
               )
@@ -164,15 +174,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               .map(
                 (sighting) => fm.Marker(
                   point: ll.LatLng(sighting.latitude, sighting.longitude),
-                  width: 48,
-                  height: 56,
+                  width: 52,
+                  height: 64,
+                  alignment: Alignment.bottomCenter,
                   child: GestureDetector(
                     onTap: () => CatDetailSheet.show(context, sighting),
-                    child: const Icon(
-                      Icons.location_on,
-                      color: AppColors.marmalade,
-                      size: 48,
-                    ),
+                    child: _CatPhotoMarker(photoUrl: sighting.photoUrl),
                   ),
                 ),
               )
@@ -376,6 +383,73 @@ class _AccountButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CatPhotoMarker extends StatelessWidget {
+  final String photoUrl;
+
+  const _CatPhotoMarker({required this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 64,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            top: 28,
+            child: CustomPaint(
+              size: const Size(52, 36),
+              painter: _PinTailPainter(),
+            ),
+          ),
+          Container(
+            width: 52,
+            height: 52,
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: AppColors.marmalade,
+                  child: Icon(Icons.pets_rounded, color: AppColors.ink),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PinTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(10, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width - 10, 0)
+      ..close();
+    canvas.drawPath(path, Paint()..color = AppColors.marmalade);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _StatusPill extends StatelessWidget {
