@@ -19,16 +19,16 @@ class CatMarkerIcon {
 
   static Future<BitmapDescriptor> load([String? photoUrl]) async {
     if (kIsWeb) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
 
     if (photoUrl == null || photoUrl.isEmpty) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
 
     final sourceImage = await _loadImage(photoUrl);
     if (sourceImage == null) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
 
     final recorder = ui.PictureRecorder();
@@ -47,7 +47,7 @@ class CatMarkerIcon {
         ..close(),
     );
     canvas.drawShadow(pin, Colors.black, 2, true);
-    canvas.drawPath(pin, Paint()..color = AppColors.sage);
+    canvas.drawPath(pin, Paint()..color = AppColors.marmalade);
     canvas.save();
     canvas.clipPath(circle);
     final source = Rect.fromLTWH(
@@ -68,7 +68,7 @@ class CatMarkerIcon {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = AppColors.paper,
+        ..color = Colors.white,
     );
 
     final generatedImage = await recorder.endRecording().toImage(
@@ -79,7 +79,7 @@ class CatMarkerIcon {
       format: ui.ImageByteFormat.png,
     );
     if (data == null) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     }
     return BitmapDescriptor.bytes(
       data.buffer.asUint8List(),
