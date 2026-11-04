@@ -241,7 +241,7 @@ class _SubmitSightingScreenState extends ConsumerState<SubmitSightingScreen> {
                             icon:
                                 _pinIcon ??
                                 BitmapDescriptor.defaultMarkerWithHue(
-                                  BitmapDescriptor.hueOrange,
+                                  BitmapDescriptor.hueGreen,
                                 ),
                             anchor: CatMarkerIcon.anchor,
                             onDragEnd: (newPosition) => ref

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Brand colors. Marmalade is the action color, jade (a cat-eye green) is the
-/// supporting color, and ink is a deep aubergine used instead of pure black.
+/// A quiet, nature-inspired palette keeps the map and cat photos as the focus.
 class AppColors {
   AppColors._();
 
-  static const marmalade = Color(0xFFEE8A1F);
-  static const jade = Color(0xFF3F7D6B);
-  static const ink = Color(0xFF2E2230);
-  static const milk = Color(0xFFFAF7F4);
-  static const gold = Color(0xFFF2B705);
+  static const sage = Color(0xFF5C7565);
+  static const moss = Color(0xFF405448);
+  static const ink = Color(0xFF26332C);
+  static const ivory = Color(0xFFF7F8F4);
+  static const paper = Color(0xFFFFFFFF);
+  static const terracotta = Color(0xFFB96D53);
 }
 
 class AppTheme {
@@ -18,23 +18,22 @@ class AppTheme {
 
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.marmalade,
+      seedColor: AppColors.sage,
       brightness: Brightness.light,
     ).copyWith(
-      primary: AppColors.marmalade,
-      // Dark text on marmalade has far better contrast than white text.
-      onPrimary: AppColors.ink,
-      primaryContainer: const Color(0xFFFFE3C2),
-      onPrimaryContainer: const Color(0xFF4A2A00),
-      secondary: AppColors.jade,
+      primary: AppColors.sage,
+      onPrimary: Colors.white,
+      primaryContainer: const Color(0xFFDCE7DF),
+      onPrimaryContainer: const Color(0xFF20352A),
+      secondary: AppColors.moss,
       onSecondary: Colors.white,
-      secondaryContainer: const Color(0xFFD4EBE3),
-      onSecondaryContainer: const Color(0xFF0F3A2E),
-      surface: AppColors.milk,
+      secondaryContainer: const Color(0xFFE2E9E3),
+      onSecondaryContainer: const Color(0xFF26382C),
+      surface: AppColors.ivory,
       onSurface: AppColors.ink,
-      onSurfaceVariant: const Color(0xFF6E6273),
-      outline: const Color(0xFF9C90A0),
-      outlineVariant: const Color(0xFFE9E2E6),
+      onSurfaceVariant: const Color(0xFF647168),
+      outline: const Color(0xFF9AA69D),
+      outlineVariant: const Color(0xFFDDE3DE),
     );
 
     final base = GoogleFonts.dmSansTextTheme(ThemeData.light().textTheme).apply(
@@ -42,22 +41,21 @@ class AppTheme {
       displayColor: scheme.onSurface,
     );
 
-    // Fredoka (rounded, toy-like) for titles; DM Sans for everything else.
     final textTheme = base.copyWith(
-      headlineSmall: GoogleFonts.fredoka(
+      headlineSmall: GoogleFonts.dmSans(
         fontSize: 26,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         height: 1.15,
         color: scheme.onSurface,
       ),
-      titleLarge: GoogleFonts.fredoka(
+      titleLarge: GoogleFonts.dmSans(
         fontSize: 22,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: scheme.onSurface,
       ),
-      titleMedium: GoogleFonts.fredoka(
+      titleMedium: GoogleFonts.dmSans(
         fontSize: 17,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: scheme.onSurface,
       ),
       labelLarge: GoogleFonts.dmSans(
@@ -83,7 +81,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.paper,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
@@ -97,12 +95,12 @@ class AppTheme {
         focusedErrorBorder: _inputBorder(scheme.error, width: 2),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.paper,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -117,13 +115,13 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(54),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           textStyle: textTheme.labelLarge,
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.paper,
         selectedColor: scheme.primaryContainer,
         side: BorderSide(color: scheme.outlineVariant),
         shape: const StadiumBorder(),
@@ -147,7 +145,7 @@ class AppTheme {
 
   static OutlineInputBorder _inputBorder(Color color, {double width = 1}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(color: color, width: width),
     );
   }
