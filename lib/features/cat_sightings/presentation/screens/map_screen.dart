@@ -153,7 +153,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       body: locationAsync.when(
         data: (position) {
           final icon = BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
+            BitmapDescriptor.hueGreen,
           );
           final sightings = sightingsAsync.value ?? const <CatSighting>[];
 
@@ -318,7 +318,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           FloatingActionButton.small(
             heroTag: 'recenter',
             tooltip: 'Center on my location',
-            backgroundColor: Colors.white,
+            backgroundColor: scheme.surface,
             foregroundColor: scheme.secondary,
             elevation: 2,
             onPressed: position == null
@@ -364,7 +364,7 @@ class _AccountButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: Colors.white,
+      color: scheme.surface,
       elevation: 2,
       shadowColor: Colors.black26,
       surfaceTintColor: Colors.transparent,
@@ -392,6 +392,8 @@ class _CatPhotoMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: 52,
       height: 64,
@@ -409,8 +411,8 @@ class _CatPhotoMarker extends StatelessWidget {
             width: 52,
             height: 52,
             padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: scheme.surface,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -424,9 +426,9 @@ class _CatPhotoMarker extends StatelessWidget {
               child: Image.network(
                 photoUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const ColoredBox(
-                  color: AppColors.marmalade,
-                  child: Icon(Icons.pets_rounded, color: AppColors.ink),
+                errorBuilder: (_, __, ___) => ColoredBox(
+                  color: scheme.primaryContainer,
+                  child: Icon(Icons.pets_rounded, color: scheme.primary),
                 ),
               ),
             ),
@@ -445,7 +447,7 @@ class _PinTailPainter extends CustomPainter {
       ..lineTo(size.width / 2, size.height)
       ..lineTo(size.width - 10, 0)
       ..close();
-    canvas.drawPath(path, Paint()..color = AppColors.marmalade);
+    canvas.drawPath(path, Paint()..color = AppColors.sage);
   }
 
   @override
@@ -474,7 +476,7 @@ class _StatusPill extends StatelessWidget {
     final foreground = isError ? scheme.onErrorContainer : scheme.onSurface;
 
     return Material(
-      color: isError ? scheme.errorContainer : Colors.white,
+      color: isError ? scheme.errorContainer : scheme.surface,
       elevation: 2,
       shadowColor: Colors.black26,
       surfaceTintColor: Colors.transparent,

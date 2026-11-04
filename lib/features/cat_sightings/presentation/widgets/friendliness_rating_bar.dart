@@ -38,7 +38,7 @@ class FriendlinessRatingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unrated = Theme.of(context).colorScheme.outlineVariant;
-    const star = Icon(Icons.star_rounded, color: AppColors.gold);
+    const star = Icon(Icons.star_rounded, color: AppColors.terracotta);
 
     if (readOnly) {
       return RatingBarIndicator(
