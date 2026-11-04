@@ -341,11 +341,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: const Icon(Icons.my_location_rounded),
           ),
           const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'spot_cat',
-            onPressed: _onSpotACatPressed,
-            icon: const Icon(Icons.pets_rounded),
-            label: const Text('Spot a cat'),
+          Transform.scale(
+            scale: 1.02,
+            child: FloatingActionButton.small(
+              heroTag: 'spot_cat',
+              tooltip: 'Spot a cat',
+              onPressed: _onSpotACatPressed,
+              child: const Icon(Icons.pets_rounded),
+            ),
           ),
         ],
       ),
